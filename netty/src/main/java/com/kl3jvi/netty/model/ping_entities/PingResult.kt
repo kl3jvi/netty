@@ -1,4 +1,4 @@
-package com.kl3jvi.netty.model
+package com.kl3jvi.netty.model.ping_entities
 
 import java.net.InetAddress
 
