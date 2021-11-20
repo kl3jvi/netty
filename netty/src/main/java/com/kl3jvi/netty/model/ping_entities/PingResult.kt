@@ -2,7 +2,7 @@ package com.kl3jvi.netty.model.ping_entities
 
 import java.net.InetAddress
 
-class PingResult(val address: InetAddress) {
+class PingResult(val address: InetAddress? = null) {
     var isReachable = false
     var error: String? = null
     var timeTaken = 0f

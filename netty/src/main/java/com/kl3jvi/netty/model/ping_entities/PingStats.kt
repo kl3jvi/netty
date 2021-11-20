@@ -1,5 +1,6 @@
 package com.kl3jvi.netty.model.ping_entities
 
+import com.kl3jvi.netty.ping.Ping
 import java.net.InetAddress
 
 data class PingStats(
