@@ -13,12 +13,12 @@ class Ping private constructor(
     val cancelled: Boolean
 ) {
     data class Builder(
-        var addressString: String? = null,
-        var address: InetAddress? = null,
-        var delayBetweenScansMillis: Int = 0,
-        var times: Int = 1,
-        var pingOptions: PingOptions,
-        var cancelled: Boolean = false
+        private var addressString: String? = null,
+        private var address: InetAddress? = null,
+        private var delayBetweenScansMillis: Int = 0,
+        private var times: Int = 1,
+        private var pingOptions: PingOptions = PingOptions(),
+        private var cancelled: Boolean = false
     ) {
         fun onAddress(addressString: String?) = apply { this.addressString = addressString }
 
@@ -35,11 +35,28 @@ class Ping private constructor(
                 else throw CustomException("Time to live should be greater than 1!")
             }
 
+        fun setDelayMillis(delayBetweenScansMillis: Int) = apply {
+            this.delayBetweenScansMillis = delayBetweenScansMillis
+        }
+
         fun setTimes(times: Int) = apply {
             if (times < 0) throw CustomException("Times cannot be less than 0") else this.times =
                 times
         }
+
+        fun cancel() = apply { cancelled = true }
+
+        fun doPing() = apply {
+            Ping(
+                addressString,
+                address,
+                delayBetweenScansMillis,
+                times,
+                pingOptions,
+                cancelled
+            )
+        }
+
+
     }
-
-
 }
