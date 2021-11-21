@@ -14,4 +14,4 @@ dependencyResolutionManagement {
 }
 rootProject.name = "netty"
 include ':app'
-include ':netty'
+include ':library'
