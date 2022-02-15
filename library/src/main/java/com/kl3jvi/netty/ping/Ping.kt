@@ -1,62 +1,55 @@
 package com.kl3jvi.netty.ping
 
+import android.Manifest.permission.INTERNET
+import androidx.annotation.RequiresPermission
 import com.kl3jvi.netty.model.ping_entities.PingOptions
-import com.kl3jvi.netty.utils.CustomException
-import java.net.InetAddress
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStreamReader
 
-class Ping private constructor(
-    val addressString: String?,
-    val address: InetAddress?,
-    val delayBetweenScansMillis: Int,
-    val times: Int,
-    val pingOptions: PingOptions,
-    val cancelled: Boolean
-) {
-    data class Builder(
-        private var addressString: String? = null,
-        private var address: InetAddress? = null,
-        private var delayBetweenScansMillis: Int = 0,
-        private var times: Int = 1,
-        private var pingOptions: PingOptions = PingOptions(),
-        private var cancelled: Boolean = false
-    ) {
-        fun onAddress(addressString: String?) = apply { this.addressString = addressString }
 
-        fun onAddress(address: InetAddress?) = apply { this.address = address }
+object Ping {
+    /**
+     * Ping on ip address specified.
+     * Requires Internet permission.
+     */
+    @RequiresPermission(INTERNET)
+    suspend fun doPing(
+        pingOptions: PingOptions,
+        coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default,
+        callback: (pingResult: PingResult<String>?) -> Unit
+    ) = coroutineScope {
 
-        fun setTimeOutMillis(timeoutMillis: Int) = apply {
-            if (timeoutMillis > 0) this.pingOptions.timeoutMillis = timeoutMillis
-            else throw CustomException("Time can't be negative!")
-        }
+        launch(coroutineDispatcher) {
 
-        fun setTimeToLive(timeToLive: Int) =
-            apply {
-                if (timeToLive > 1) this.pingOptions.timeToLive = timeToLive
-                else throw CustomException("Time to live should be greater than 1!")
+            val ip = pingOptions.ip
+            val timeout = pingOptions.timeToLive
+            val times = pingOptions.times
+
+            val pingCmd = "ip neigh show"
+            try {
+                val runtime = Runtime.getRuntime()
+                val process = runtime.exec(pingCmd)
+                val bufferedReader = BufferedReader(InputStreamReader(process.inputStream))
+                var inputLine: String?
+                while (bufferedReader.readLine().also { inputLine = it } != null) {
+                    val result = PingResult.Success(inputLine)
+                    callback(result)
+                }
+                bufferedReader.close()
+                process.destroy()
+            } catch (e: IOException) {
+                e.printStackTrace()
+                println(e)
             }
-
-        fun setDelayMillis(delayBetweenScansMillis: Int) = apply {
-            this.delayBetweenScansMillis = delayBetweenScansMillis
         }
-
-        fun setTimes(times: Int) = apply {
-            if (times < 0) throw CustomException("Times cannot be less than 0") else this.times =
-                times
-        }
-
-        fun cancel() = apply { cancelled = true }
-
-        fun doPing() = apply {
-            Ping(
-                addressString,
-                address,
-                delayBetweenScansMillis,
-                times,
-                pingOptions,
-                cancelled
-            )
-        }
-
-
     }
 }
+
+
+
+
