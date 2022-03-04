@@ -3,8 +3,9 @@ package com.kl3jvi.netty.ping
 import android.Manifest.permission.INTERNET
 import androidx.annotation.RequiresPermission
 import com.kl3jvi.netty.model.ping_entities.PingOptions
-import kotlinx.coroutines.CoroutineDispatcher
+import com.kl3jvi.netty.utils.CustomException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.io.BufferedReader
@@ -17,23 +18,23 @@ object Ping {
      * Ping on ip address specified.
      * Requires Internet permission.
      */
+    private lateinit var process: Process
+    private lateinit var runtime: Runtime
+
     @RequiresPermission(INTERNET)
     suspend fun doPing(
         pingOptions: PingOptions,
-        coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default,
         callback: (pingResult: PingResult<String>?) -> Unit
     ) = coroutineScope {
-
-        launch(coroutineDispatcher) {
-
+        async (Dispatchers.IO) {
             val ip = pingOptions.ip
             val timeout = pingOptions.timeToLive
             val times = pingOptions.times
 
-            val pingCmd = "ip neigh show"
+            val pingCmd = "ping $ip"
             try {
-                val runtime = Runtime.getRuntime()
-                val process = runtime.exec(pingCmd)
+                runtime = Runtime.getRuntime()
+                process = runtime.exec(pingCmd)
                 val bufferedReader = BufferedReader(InputStreamReader(process.inputStream))
                 var inputLine: String?
                 while (bufferedReader.readLine().also { inputLine = it } != null) {
@@ -44,10 +45,15 @@ object Ping {
                 process.destroy()
             } catch (e: IOException) {
                 e.printStackTrace()
-                println(e)
             }
         }
     }
+
+    fun cancelPing()  {
+        process.destroy()
+    }
+
+
 }
 
 
