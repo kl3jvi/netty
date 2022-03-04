@@ -1,1 +1,1 @@
-<img src="assets/splash.png" alt="Tauri" />
+<img src="assets/splash.png" alt="Netty" />
