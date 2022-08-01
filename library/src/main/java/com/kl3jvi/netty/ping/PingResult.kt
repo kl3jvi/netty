@@ -22,3 +22,8 @@ sealed class PingResult<T>(val data: T? = null, val message: String? = null) {
     class Success<T>(data: T?) : PingResult<T>(data)
     class Error<T>(message: String?) : PingResult<T>(null, message)
 }
+
+//sealed interface PingResult {
+//    object Success : PingResult
+//    object Error : PingResult()
+//}
